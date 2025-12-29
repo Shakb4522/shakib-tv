@@ -1224,10 +1224,6 @@ body {
 
     .modal-content {
         width: 100%;
-        min-height: 100vh;
-        /* Minimum full height */
-        max-height: none;
-        /* Allow content to expand */
         max-width: 100%;
         border-radius: 0;
         overflow: visible;
