@@ -12,13 +12,36 @@
 
 <body>
     <header class="header">
-        <div class="logo">ShakibTV</div>
+        <div class="logo-container">
+            <button class="burger-btn" id="burgerBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="logo">ShakibTV</div>
+        </div>
         <nav class="nav">
             <a href="#" class="nav-link active">Home</a>
             <a href="#" class="nav-link">TV Shows</a>
             <a href="#" class="nav-link">Movies</a>
             <a href="#" class="nav-link">My List</a>
         </nav>
+
+        <!-- Mobile Side Menu -->
+        <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+        <nav class="mobile-nav" id="mobileNav">
+            <div class="mobile-nav-header">
+                <div class="menu-title">Menu</div>
+                <button class="close-menu-btn" id="closeMenuBtn">&times;</button>
+            </div>
+            <div class="mobile-nav-links">
+                <a href="#" class="mobile-nav-link active">Home</a>
+                <a href="#" class="mobile-nav-link">TV Shows</a>
+                <a href="#" class="mobile-nav-link">Movies</a>
+                <a href="#" class="mobile-nav-link">My List</a>
+            </div>
+        </nav>
+
         <div class="header-right">
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Titles, people, genres">

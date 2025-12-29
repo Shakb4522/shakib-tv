@@ -61,9 +61,64 @@ navLinks.forEach(link => {
         navLinks.forEach(l => l.classList.remove('active'));
         e.currentTarget.classList.add('active');
 
-        loadPage(type).catch(err => console.error('[Nav] Error in loadPage:', err));
+        handleNavigation(type);
     };
 });
+
+// Mobile Navigation Logic
+function setupMobileMenu() {
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+    const toggleMenu = () => {
+        mobileNav.classList.toggle('open');
+        mobileNavOverlay.classList.toggle('open');
+        // Prevent body scroll when menu is open
+        document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+    };
+
+    if (burgerBtn) burgerBtn.onclick = toggleMenu;
+    if (closeMenuBtn) closeMenuBtn.onclick = toggleMenu;
+    if (mobileNavOverlay) mobileNavOverlay.onclick = toggleMenu;
+
+    mobileLinks.forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            const type = e.currentTarget.textContent.trim();
+            handleNavigation(type);
+            toggleMenu(); // Close menu after clicking
+        };
+    });
+}
+
+function handleNavigation(type) {
+    // Clear active state from desktop nav links
+    navLinks.forEach(l => l.classList.remove('active'));
+    // Find and activate the corresponding desktop nav link
+    const activeNavLink = Array.from(navLinks).find(link => link.textContent.trim() === type);
+    if (activeNavLink) {
+        activeNavLink.classList.add('active');
+    }
+
+    // Reset UI state
+    rowsContainer.innerHTML = '';
+    searchResults.style.display = 'none';
+    genreResults.style.display = 'none';
+    hero.style.display = 'flex';
+    rowsContainer.style.display = 'block';
+    genreSelector.style.display = 'none'; // Default to hidden, show if needed
+
+    if (type === 'Home') {
+        init(); // Re-init home
+    } else if (type === 'TV Shows') {
+        loadPage('TV Shows');
+    } else if (type === 'Movies') {
+        loadPage('Movies');
+    }
+}
 
 async function loadPage(type) {
     console.log(`[loadPage] Start: ${type}`);
@@ -806,4 +861,5 @@ window.onscroll = () => {
     }
 };
 
+setupMobileMenu();
 init();
