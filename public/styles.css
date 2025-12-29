@@ -411,7 +411,8 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
-    z-index: 2000;
+    z-index: 3000;
+    /* Increased z-index to be above burger menu */
     justify-content: center;
     align-items: flex-start;
     /* Ensure top of modal is at top of screen */

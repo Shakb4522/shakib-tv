@@ -546,8 +546,8 @@ async function updateEpisodes(tvData, seasonNumber) {
 
 closeModal.onclick = () => {
     modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scroll
     trailerIframe.src = '';
-    document.body.style.overflow = 'auto';
 };
 
 // Close modal when clicking outside content
