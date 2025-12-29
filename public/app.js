@@ -1,3 +1,16 @@
+// Initialize Capacitor (for mobile apps)
+// Capacitor plugins are automatically available in native apps
+// This initialization will be handled by Capacitor's native bridge
+
+// Register Service Worker for PWA (web only)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('Service Worker registered'))
+            .catch(err => console.log('Service Worker registration failed:', err));
+    });
+}
+
 const rowsContainer = document.getElementById('rows-container');
 const hero = document.getElementById('hero');
 const heroBg = document.getElementById('heroBg');
