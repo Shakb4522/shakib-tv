@@ -88,6 +88,11 @@ function setupMobileMenu() {
         link.onclick = (e) => {
             e.preventDefault();
             const type = e.currentTarget.textContent.trim();
+
+            // Update mobile nav active state
+            mobileLinks.forEach(l => l.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
             handleNavigation(type);
             toggleMenu(); // Close menu after clicking
         };
