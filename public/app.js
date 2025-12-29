@@ -11,6 +11,120 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// ==================== Authentication ====================
+let authToken = localStorage.getItem('authToken');
+let currentUser = null;
+
+// API helper with auth
+async function apiCall(endpoint, options = {}) {
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    const response = await fetch(endpoint, {
+        ...options,
+        headers
+    });
+    
+    if (response.status === 401) {
+        // Token expired or invalid
+        logout();
+        return null;
+    }
+    
+    return response.json();
+}
+
+// Register
+async function register(username, email, password) {
+    const data = await apiCall('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ username, email, password })
+    });
+    
+    if (data && data.success) {
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('authToken', authToken);
+        return true;
+    }
+    return false;
+}
+
+// Login
+async function login(email, password) {
+    const data = await apiCall('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+    });
+    
+    if (data && data.success) {
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('authToken', authToken);
+        return true;
+    }
+    return false;
+}
+
+// Logout
+function logout() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('authToken');
+    updateAuthUI();
+    location.reload();
+}
+
+// Get current user
+async function getCurrentUser() {
+    if (!authToken) return null;
+    const data = await apiCall('/api/auth/me');
+    if (data) {
+        currentUser = data;
+        return data;
+    }
+    return null;
+}
+
+// Check if logged in
+function isLoggedIn() {
+    return !!authToken;
+}
+
+// Update auth UI
+function updateAuthUI() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const userName = document.getElementById('userName');
+    
+    if (isLoggedIn() && currentUser) {
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'block';
+        if (userName) {
+            userName.textContent = currentUser.username;
+            userName.style.display = 'block';
+        }
+    } else {
+        if (loginBtn) loginBtn.style.display = 'block';
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (userName) userName.style.display = 'none';
+    }
+}
+
+// Initialize auth on load
+(async () => {
+    if (authToken) {
+        await getCurrentUser();
+    }
+    updateAuthUI();
+})();
+
 const rowsContainer = document.getElementById('rows-container');
 const hero = document.getElementById('hero');
 const heroBg = document.getElementById('heroBg');
@@ -483,6 +597,21 @@ async function showModal(id, movieData) {
         }
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        // Check My List status if logged in
+        if (isLoggedIn()) {
+            await checkMyListStatus(fullMovieData);
+            
+            const addBtn = document.getElementById('modalMyListBtn');
+            const removeBtn = document.getElementById('modalRemoveListBtn');
+            
+            if (addBtn) {
+                addBtn.onclick = () => addToMyList(fullMovieData);
+            }
+            if (removeBtn) {
+                removeBtn.onclick = () => removeFromMyList(fullMovieData);
+            }
+        }
     } catch (err) {
         console.error('Error loading modal info:', err);
         alert('Could not load details. Please try again later.');
@@ -622,6 +751,13 @@ function launchPlayer(movie, event) {
         setTimeout(() => {
             playerIframe.src = embedUrl;
         }, 100);
+        
+        // Save to continue watching if logged in
+        if (isLoggedIn()) {
+            const season = movie.selectedSeason || null;
+            const episode = movie.selectedEpisode || null;
+            updateContinueWatching(movie, season, episode, 0);
+        }
     }
 }
 
@@ -880,5 +1016,242 @@ window.onscroll = () => {
     }
 };
 
+// ==================== My List Functions ====================
+
+// Add to My List
+async function addToMyList(movie) {
+    if (!isLoggedIn()) {
+        showAuthModal();
+        return;
+    }
+    
+    const media_type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+    const data = await apiCall('/api/favorites', {
+        method: 'POST',
+        body: JSON.stringify({
+            tmdb_id: movie.id,
+            media_type: media_type,
+            title: movie.title || movie.name,
+            poster_path: movie.poster_path,
+            backdrop_path: movie.backdrop_path
+        })
+    });
+    
+    if (data && data.success) {
+        checkMyListStatus(movie);
+    }
+}
+
+// Remove from My List
+async function removeFromMyList(movie) {
+    if (!isLoggedIn()) return;
+    
+    const media_type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+    const data = await apiCall(`/api/favorites/${movie.id}/${media_type}`, {
+        method: 'DELETE'
+    });
+    
+    if (data && data.success) {
+        checkMyListStatus(movie);
+    }
+}
+
+// Check if in My List
+async function checkMyListStatus(movie) {
+    if (!isLoggedIn()) {
+        const addBtn = document.getElementById('modalMyListBtn');
+        const removeBtn = document.getElementById('modalRemoveListBtn');
+        if (addBtn) addBtn.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'none';
+        return;
+    }
+    
+    const media_type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+    const data = await apiCall(`/api/favorites/check/${movie.id}/${media_type}`);
+    
+    const addBtn = document.getElementById('modalMyListBtn');
+    const removeBtn = document.getElementById('modalRemoveListBtn');
+    
+    if (data && data.isFavorite) {
+        if (addBtn) addBtn.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'block';
+    } else {
+        if (addBtn) addBtn.style.display = 'block';
+        if (removeBtn) removeBtn.style.display = 'none';
+    }
+}
+
+// ==================== Continue Watching Functions ====================
+
+// Load Continue Watching
+async function loadContinueWatching() {
+    if (!isLoggedIn()) return;
+    
+    const data = await apiCall('/api/continue-watching');
+    if (data && data.length > 0) {
+        const container = document.getElementById('continueWatchingContainer');
+        const row = document.getElementById('continueWatchingRow');
+        
+        if (container && row) {
+            container.innerHTML = '';
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                const poster = item.poster_path ? `${POSTER_BASE_URL}${item.poster_path}` : '';
+                card.style.backgroundImage = poster ? `url(${poster})` : '';
+                card.innerHTML = `<div class="movie-card-info">${item.title}</div>`;
+                card.onclick = () => {
+                    const movieData = {
+                        id: item.tmdb_id,
+                        media_type: item.media_type,
+                        title: item.title,
+                        selectedSeason: item.season_number,
+                        selectedEpisode: item.episode_number
+                    };
+                    showModal(item.tmdb_id, movieData);
+                };
+                container.appendChild(card);
+            });
+            row.style.display = 'block';
+        }
+    }
+}
+
+// Update Continue Watching
+async function updateContinueWatching(movie, season, episode, progress) {
+    if (!isLoggedIn()) return;
+    
+    const media_type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
+    await apiCall('/api/continue-watching', {
+        method: 'POST',
+        body: JSON.stringify({
+            tmdb_id: movie.id,
+            media_type: media_type,
+            title: movie.title || movie.name,
+            poster_path: movie.poster_path,
+            season_number: season || null,
+            episode_number: episode || null,
+            progress_percent: progress || 0
+        })
+    });
+}
+
+// ==================== Auth Modal Functions ====================
+
+function showAuthModal() {
+    const authModal = document.getElementById('authModal');
+    if (authModal) authModal.style.display = 'flex';
+}
+
+function hideAuthModal() {
+    const authModal = document.getElementById('authModal');
+    if (authModal) authModal.style.display = 'none';
+}
+
+// Auth Modal Setup
+const authModal = document.getElementById('authModal');
+const closeAuthModal = document.querySelector('.close-auth-modal');
+const authTabs = document.querySelectorAll('.auth-tab');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+const registerSubmitBtn = document.getElementById('registerSubmitBtn');
+
+// Tab switching
+if (authTabs) {
+    authTabs.forEach(tab => {
+        tab.onclick = () => {
+            authTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            if (tab.dataset.tab === 'login') {
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            } else {
+                loginForm.classList.remove('active');
+                registerForm.classList.add('active');
+            }
+        };
+    });
+}
+
+// Close modal
+if (closeAuthModal) {
+    closeAuthModal.onclick = hideAuthModal;
+}
+
+if (authModal) {
+    authModal.onclick = (e) => {
+        if (e.target === authModal) hideAuthModal();
+    };
+}
+
+// Login button
+if (loginBtn) {
+    loginBtn.onclick = showAuthModal;
+}
+
+// Logout button
+if (logoutBtn) {
+    logoutBtn.onclick = logout;
+}
+
+// Login submit
+if (loginSubmitBtn) {
+    loginSubmitBtn.onclick = async () => {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+        
+        if (!email || !password) {
+            if (errorDiv) errorDiv.textContent = 'Please fill in all fields';
+            return;
+        }
+        
+        const success = await login(email, password);
+        if (success) {
+            hideAuthModal();
+            updateAuthUI();
+            loadContinueWatching();
+            location.reload();
+        } else {
+            if (errorDiv) errorDiv.textContent = 'Invalid credentials';
+        }
+    };
+}
+
+// Register submit
+if (registerSubmitBtn) {
+    registerSubmitBtn.onclick = async () => {
+        const username = document.getElementById('registerUsername').value;
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const errorDiv = document.getElementById('registerError');
+        
+        if (!username || !email || !password) {
+            if (errorDiv) errorDiv.textContent = 'Please fill in all fields';
+            return;
+        }
+        
+        const success = await register(username, email, password);
+        if (success) {
+            hideAuthModal();
+            updateAuthUI();
+            loadContinueWatching();
+            location.reload();
+        } else {
+            if (errorDiv) errorDiv.textContent = 'Registration failed. User may already exist.';
+        }
+    };
+}
+
+
 setupMobileMenu();
 init();
+
+// Load continue watching on page load
+if (isLoggedIn()) {
+    loadContinueWatching();
+}

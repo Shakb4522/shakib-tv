@@ -1302,3 +1302,125 @@ body {
         padding: 15px;
     }
 }
+
+/* Auth Modal */
+.auth-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-modal-content {
+    background-color: var(--modal-bg);
+    padding: 40px;
+    border-radius: 8px;
+    max-width: 450px;
+    width: 90%;
+    position: relative;
+}
+
+.close-auth-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--netflix-white);
+    cursor: pointer;
+}
+
+.close-auth-modal:hover {
+    color: var(--netflix-red);
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #333;
+}
+
+.auth-tab {
+    background: none;
+    border: none;
+    color: var(--netflix-grey);
+    padding: 15px 30px;
+    cursor: pointer;
+    font-size: 18px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.auth-tab.active {
+    color: var(--netflix-white);
+    border-bottom-color: var(--netflix-red);
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.auth-form h2 {
+    margin-bottom: 20px;
+    font-size: 32px;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #333;
+    border: none;
+    border-radius: 4px;
+    color: var(--netflix-white);
+    font-size: 16px;
+}
+
+.auth-form input:focus {
+    outline: none;
+    background-color: #444;
+}
+
+.auth-form .btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.auth-error {
+    color: var(--netflix-red);
+    margin-top: 10px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.login-btn, .logout-btn {
+    background-color: var(--netflix-red);
+    color: var(--netflix-white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.login-btn:hover, .logout-btn:hover {
+    background-color: #f40612;
+}
+
+#userName {
+    margin-right: 15px;
+    color: var(--netflix-white);
+    font-weight: 600;
+}

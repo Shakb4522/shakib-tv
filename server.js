@@ -1,24 +1,151 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { connectDB, User, Favorite, WatchHistory, ContinueWatching } = require('./db');
+const { authenticateToken } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.TMDB_API_KEY || "d37c930cb366013a18131d662c15c22d";
 const BASE_URL = "https://api.themoviedb.org/3";
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 app.use(express.static('public'));
 app.use(express.json());
 
-// Initialize MongoDB on startup
+// Initialize MongoDB on startup (non-blocking)
 (async () => {
-    await connectDB();
+    try {
+        await connectDB();
+    } catch (error) {
+        console.error('Failed to connect to MongoDB:', error);
+        // Server will continue running without database
+    }
 })();
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ==================== Authentication Routes ====================
+
+// Register
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email, and password are required' });
+        }
+
+        // Check if user exists
+        const existingUser = await User.findOne({
+            $or: [{ email }, { username }]
+        });
+
+        if (existingUser) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Hash password
+        const saltRounds = 10;
+        const password_hash = await bcrypt.hash(password, saltRounds);
+
+        // Create user
+        const user = new User({
+            username,
+            email,
+            password_hash
+        });
+
+        await user.save();
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Login
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        // Find user
+        const user = await User.findOne({ email: email.toLowerCase() });
+
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Check password
+        const isValidPassword = await bcrypt.compare(password, user.password_hash);
+
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get current user (protected)
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('-password_hash');
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.json({
+            id: user._id,
+            username: user.username,
+            email: user.email
+        });
+    } catch (error) {
+        console.error('Get user error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Proxy endpoints for TMDB
@@ -149,9 +276,9 @@ app.get('/api/discover/:type/:genreId', async (req, res) => {
 
 // ==================== MongoDB Endpoints ====================
 
-// Favorites (My List) Endpoints
-app.get('/api/user/:userId/favorites', async (req, res) => {
-    const { userId } = req.params;
+// Helper endpoint to get user favorites (using token)
+app.get('/api/favorites', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     try {
         const favorites = await Favorite.find({ user_id: userId })
             .sort({ createdAt: -1 })
@@ -163,8 +290,8 @@ app.get('/api/user/:userId/favorites', async (req, res) => {
     }
 });
 
-app.post('/api/user/:userId/favorites', async (req, res) => {
-    const { userId } = req.params;
+app.post('/api/favorites', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     const { tmdb_id, media_type, title, poster_path, backdrop_path } = req.body;
     
     try {
@@ -187,8 +314,9 @@ app.post('/api/user/:userId/favorites', async (req, res) => {
     }
 });
 
-app.delete('/api/user/:userId/favorites/:tmdbId/:mediaType', async (req, res) => {
-    const { userId, tmdbId, mediaType } = req.params;
+app.delete('/api/favorites/:tmdbId/:mediaType', authenticateToken, async (req, res) => {
+    const { tmdbId, mediaType } = req.params;
+    const userId = req.user.userId;
     
     try {
         await Favorite.findOneAndDelete({
@@ -203,8 +331,9 @@ app.delete('/api/user/:userId/favorites/:tmdbId/:mediaType', async (req, res) =>
     }
 });
 
-app.get('/api/user/:userId/favorites/check/:tmdbId/:mediaType', async (req, res) => {
-    const { userId, tmdbId, mediaType } = req.params;
+app.get('/api/favorites/check/:tmdbId/:mediaType', authenticateToken, async (req, res) => {
+    const { tmdbId, mediaType } = req.params;
+    const userId = req.user.userId;
     
     try {
         const favorite = await Favorite.findOne({
@@ -220,8 +349,8 @@ app.get('/api/user/:userId/favorites/check/:tmdbId/:mediaType', async (req, res)
 });
 
 // Watch History Endpoints
-app.get('/api/user/:userId/watch-history', async (req, res) => {
-    const { userId } = req.params;
+app.get('/api/watch-history', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     try {
         const history = await WatchHistory.find({ user_id: userId })
             .sort({ last_watched_at: -1 })
@@ -234,8 +363,8 @@ app.get('/api/user/:userId/watch-history', async (req, res) => {
     }
 });
 
-app.post('/api/user/:userId/watch-history', async (req, res) => {
-    const { userId } = req.params;
+app.post('/api/watch-history', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     const { tmdb_id, media_type, title, poster_path, season_number, episode_number, progress_percent } = req.body;
     
     try {
@@ -259,8 +388,8 @@ app.post('/api/user/:userId/watch-history', async (req, res) => {
 });
 
 // Continue Watching Endpoints
-app.get('/api/user/:userId/continue-watching', async (req, res) => {
-    const { userId } = req.params;
+app.get('/api/continue-watching', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     try {
         const items = await ContinueWatching.find({ user_id: userId })
             .sort({ updatedAt: -1 })
@@ -273,8 +402,8 @@ app.get('/api/user/:userId/continue-watching', async (req, res) => {
     }
 });
 
-app.post('/api/user/:userId/continue-watching', async (req, res) => {
-    const { userId } = req.params;
+app.post('/api/continue-watching', authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
     const { tmdb_id, media_type, title, poster_path, season_number, episode_number, progress_percent } = req.body;
     
     try {
@@ -299,8 +428,9 @@ app.post('/api/user/:userId/continue-watching', async (req, res) => {
     }
 });
 
-app.delete('/api/user/:userId/continue-watching/:tmdbId/:mediaType', async (req, res) => {
-    const { userId, tmdbId, mediaType } = req.params;
+app.delete('/api/continue-watching/:tmdbId/:mediaType', authenticateToken, async (req, res) => {
+    const { tmdbId, mediaType } = req.params;
+    const userId = req.user.userId;
     
     try {
         await ContinueWatching.findOneAndDelete({
@@ -317,13 +447,22 @@ app.delete('/api/user/:userId/continue-watching/:tmdbId/:mediaType', async (req,
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
-    const mongoose = require('mongoose');
-    const dbStatus = mongoose.connection.readyState === 1;
-    res.json({
-        status: 'ok',
-        database: dbStatus ? 'connected' : 'not connected',
-        timestamp: new Date().toISOString()
-    });
+    try {
+        const mongoose = require('mongoose');
+        const dbStatus = mongoose.connection.readyState === 1;
+        res.json({
+            status: 'ok',
+            database: dbStatus ? 'connected' : 'not connected',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.json({
+            status: 'ok',
+            database: 'not configured',
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+    }
 });
 
 app.listen(PORT, () => {
