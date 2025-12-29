@@ -1200,7 +1200,8 @@ body {
     /* Modal Mobile */
     .modal {
         padding: 0;
-        align-items: flex-end;
+        align-items: flex-start;
+        /* Changed from flex-end to keep modal at top */
     }
 
     .modal-content {
@@ -1208,12 +1209,15 @@ body {
         height: 100%;
         max-width: 100%;
         border-radius: 0;
+        overflow-y: auto;
+        /* Allow scrolling within modal */
     }
 
     .close-modal {
         top: 15px;
         right: 15px;
-        z-index: 2200;
+        z-index: 3100;
+        /* Above modal content */
         background: rgba(0, 0, 0, 0.5);
     }
 
