@@ -89,9 +89,21 @@ body {
 .search-container {
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid white;
-    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.75);
+    /* Darker background */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Softer border */
+    padding: 8px 12px;
+    border-radius: 20px;
+    /* Rounded corners */
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.search-container:hover,
+.search-container:focus-within {
+    background: black;
+    border-color: white;
 }
 
 #searchInput {
@@ -100,12 +112,14 @@ body {
     color: white;
     outline: none;
     width: 0;
-    transition: width 0.5s;
+    transition: width 0.5s ease-in-out;
+    font-size: 0.95rem;
 }
 
 .search-container:hover #searchInput,
 #searchInput:focus {
-    width: 200px;
+    width: 250px;
+    /* Wider search on desktop */
 }
 
 #searchBtn {
@@ -113,6 +127,12 @@ body {
     border: none;
     color: white;
     cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    /* Centers icon if it was an SVG */
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
 }
 
 /* Hero */
@@ -1005,9 +1025,34 @@ body {
     }
 
     .nav {
-        margin-left: 10px;
+        margin-left: 0;
         gap: 15px;
+        display: flex;
+        /* Show nav on mobile */
+        order: 3;
+        /* Move to bottom or new line if wrapping */
+        width: 100%;
+        overflow-x: auto;
+        /* Horizontal scroll */
+        white-space: nowrap;
+        padding-top: 10px;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Subtle separator */
+        margin-top: 10px;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+    }
+
+    .nav::-webkit-scrollbar {
         display: none;
+        /* Hide scrollbar for cleaner look */
     }
 
     .header-right {
