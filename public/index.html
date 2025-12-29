@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShakibTV - Stream Your Favorite Movies</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo">ShakibTV</div>
+        <nav class="nav">
+            <a href="#" class="nav-link active">Home</a>
+            <a href="#" class="nav-link">TV Shows</a>
+            <a href="#" class="nav-link">Movies</a>
+            <a href="#" class="nav-link">My List</a>
+        </nav>
+        <div class="header-right">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Titles, people, genres">
+                <button id="searchBtn">🔍</button>
+            </div>
+            <div class="user-profile">👤</div>
+        </div>
+    </header>
+
+    <main>
+        <div id="hero" class="hero">
+            <div id="heroBg" class="hero-bg"></div>
+            <div class="hero-content">
+                <h1 id="heroTitle"></h1>
+                <p id="heroOverview"></p>
+                <div class="hero-buttons">
+                    <button class="btn btn-play" id="heroPlayBtn" type="button">▶ Play</button>
+                    <button class="btn btn-info" id="heroInfoBtn" type="button">ⓘ More Info</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="genreSelector" class="genre-selector" style="display:none;">
+            <!-- Genre chips will be injected here -->
+        </div>
+
+        <div id="rows-container">
+            <!-- Rows will be injected here -->
+        </div>
+
+        <div id="genreResults" class="genre-results-container" style="display:none;">
+            <div class="genre-results-header">
+                <button id="backToRowsBtn" class="btn btn-info">← Back</button>
+                <h2 id="genreTitle">Genre Name</h2>
+            </div>
+            <div id="genreGrid" class="movies-grid"></div>
+            <div id="genrePagination" class="pagination"></div>
+        </div>
+
+        <div id="searchResults" class="search-results-container" style="display:none;">
+            <h2>Search Results</h2>
+            <div id="searchGrid" class="movies-grid"></div>
+        </div>
+    </main>
+
+    <!-- Modal for Movie Details -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-hero" id="modalHero">
+                <div class="modal-hero-overlay">
+                    <h2 id="modalTitle"></h2>
+                    <div class="modal-buttons">
+                        <button class="btn btn-play" id="modalPlayBtn" type="button">▶ Play</button>
+                    </div>
+                    <div id="tvSelectors" class="tv-selectors" style="display:none;">
+                        <div class="selector-group">
+                            <label for="seasonSelect">Season</label>
+                            <select id="seasonSelect"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="modalEpisodesList" class="modal-episodes-list"></div>
+            <div class="modal-body">
+                <div class="modal-info">
+                    <div class="modal-meta">
+                        <span id="modalDate"></span>
+                        <span id="modalRuntime" class="runtime-badge"></span>
+                        <span id="modalRating" class="rating-badge"></span>
+                    </div>
+                    <p id="modalOverview"></p>
+                    <div class="modal-genres">
+                        <strong>Genres:</strong> <span id="modalGenres"></span>
+                    </div>
+                </div>
+                <div class="modal-trailer">
+                    <h3>Trailer</h3>
+                    <iframe id="trailerIframe" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div id="modalEpisodesList" class="modal-episodes-list"></div>
+        </div>
+    </div>
+
+    <!-- Player Screen -->
+    <div id="playerScreen" class="player-screen" style="display:none;">
+        <div id="playerInteractionLayer" class="player-interaction-layer"></div>
+        <div class="player-controls-overlay">
+            <div class="player-controls-left">
+                <button class="player-back-btn" id="playerBackBtn" type="button">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+                    </svg>
+                    <span>Back to Browse</span>
+                </button>
+                <div class="player-movie-info">
+                    <h1 id="playerMovieTitle">Movie Title</h1>
+                    <p id="playerMovieMeta">Release Date • Rating</p>
+                </div>
+            </div>
+            <div class="player-controls-right">
+                <div id="playerEpisodeSwitcher" class="player-episode-switcher" style="display:none;">
+                    <button id="playerEpisodesBtn" class="player-controls-btn">
+                        <span>Episodes</span>
+                    </button>
+                    <div id="playerEpisodesList" class="player-episodes-list">
+                        <!-- Episodes will be injected here -->
+                    </div>
+                </div>
+                <button id="playerNextEpisodeBtn" class="player-controls-btn" style="display:none;">
+                    <span>Next Episode</span>
+                </button>
+            </div>
+        </div>
+        <div id="upNextPrompt" class="up-next-prompt" style="display:none;">
+            <div class="up-next-content">
+                <span class="up-next-label">Up Next</span>
+                <h3 id="upNextTitle">Episode Title</h3>
+                <div class="up-next-actions">
+                    <button id="playNextNowBtn" class="btn btn-play" type="button">▶ Play Now</button>
+                    <button id="dismissUpNextBtn" class="btn btn-info" type="button">Dismiss</button>
+                </div>
+                <div class="up-next-timer-bar">
+                    <div id="upNextTimerProgress"></div>
+                </div>
+            </div>
+        </div>
+        <iframe id="playerIframe" allow="autoplay" allowfullscreen></iframe>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
