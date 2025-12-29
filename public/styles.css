@@ -94,6 +94,12 @@ body {
     transition: all 0.3s ease;
 }
 
+/* Hide mobile nav elements on desktop */
+.mobile-nav,
+.mobile-nav-overlay {
+    display: none;
+}
+
 .nav {
     display: flex;
     gap: 20px;
