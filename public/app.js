@@ -854,6 +854,7 @@ function renderSearchResults(movies) {
     rowsContainer.style.display = 'none';
     hero.style.display = 'none';
     genreSelector.style.display = 'none';
+    genreResults.style.display = 'none'; // Hide genre results too
 }
 
 // Scroll Effect for Header
