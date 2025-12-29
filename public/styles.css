@@ -991,4 +991,146 @@ body {
 .search-results-container h2 {
     padding: 20px 4%;
     margin-bottom: 20px;
-}@media (max-width: 768px) { .header { padding: 15px 4%; flex-wrap: wrap; } .logo { font-size: 2rem; margin-right: 10px; } .nav { margin-left: 10px; gap: 15px; display: none; } .header-right { gap: 10px; } .search-container:hover #searchInput, #searchInput:focus, #searchInput.active { width: 120px; } .hero { height: 60vh; margin-bottom: -50px; } .hero-content h1 { font-size: 2rem; } .hero-content p { font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; } .movie-card { height: 140px; min-width: 100px; } .modal { padding: 0; align-items: flex-end; } .modal-content { width: 100%; height: 100%; max-width: 100%; border-radius: 0; } .close-modal { top: 15px; right: 15px; z-index: 2200; background: rgba(0,0,0,0.5); } .modal-hero { height: 30vh; } .modal-body { padding: 15px; } .modal-episode-card { flex-direction: column; align-items: flex-start; gap: 10px; } .episode-thumbnail-container { width: 100%; height: auto; aspect-ratio: 16/9; } .episode-title-row { flex-direction: column; } .player-controls-overlay { flex-direction: column; justify-content: space-between; padding: 1rem; } .player-controls-right { flex-direction: row; width: 100%; justify-content: space-between; margin-top: 10px; } .up-next-prompt { bottom: 10px; right: 10px; left: 10px; width: auto; padding: 15px; } }
+}
+
+@media (max-width: 768px) {
+    .header {
+        padding: 15px 4%;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        font-size: 2rem;
+        margin-right: 10px;
+    }
+
+    .nav {
+        margin-left: 10px;
+        gap: 15px;
+        display: none;
+    }
+
+    .header-right {
+        gap: 10px;
+    }
+
+    .search-container:hover #searchInput,
+    #searchInput:focus,
+    #searchInput.active {
+        width: 120px;
+    }
+
+    .hero {
+        height: 60vh;
+        margin-bottom: -50px;
+    }
+
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+
+    .hero-content p {
+        font-size: 0.9rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .movie-card {
+        height: 140px;
+        min-width: 100px;
+    }
+
+    /* Force titles visible on mobile */
+    .movie-card-info {
+        opacity: 1;
+        visibility: visible;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        font-size: 0.75rem;
+    }
+
+    /* Modal Mobile */
+    .modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+
+    .close-modal {
+        top: 15px;
+        right: 15px;
+        z-index: 2200;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-hero {
+        height: 30vh;
+    }
+
+    .modal-body {
+        padding: 15px;
+    }
+
+    .modal-episode-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .episode-thumbnail-container {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+    }
+
+    .episode-title-row {
+        flex-direction: column;
+    }
+
+    /* Player Mobile */
+    .player-controls-overlay {
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1rem;
+    }
+
+    .player-controls-right {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+        position: relative;
+    }
+
+    /* Fix Episode List Overflow on Mobile */
+    .player-episodes-list {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        margin-top: 0;
+        z-index: 5000;
+        background: rgba(0, 0, 0, 0.95);
+        border: none;
+        border-radius: 0;
+    }
+
+    .up-next-prompt {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+        padding: 15px;
+    }
+}
