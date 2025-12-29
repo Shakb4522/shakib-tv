@@ -1166,12 +1166,22 @@ body {
 
     .header-right {
         gap: 10px;
+        flex-shrink: 1;
+        /* Allow to shrink if needed */
+        min-width: 0;
+        /* Allow flex items to shrink below content size */
+    }
+
+    .search-container {
+        max-width: 100%;
+        /* Prevent overflow */
     }
 
     .search-container:hover #searchInput,
     #searchInput:focus,
     #searchInput.active {
-        width: 120px;
+        width: 100px;
+        /* Reduced from 120px to prevent overflow */
     }
 
     .hero {
